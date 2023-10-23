@@ -1,0 +1,5 @@
+<resources>
+
+    <string name="app_name">Zona Media Group</string>
+    <string name="ukuran_corner_radius">10dp</string>
+</resources>

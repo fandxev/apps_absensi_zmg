@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:paddingHorizontal="40dp"
+    android:layout_height="match_parent">
+    <RelativeLayout
+        android:paddingTop="24dp"
+        android:paddingBottom="4dp"
+        android:layout_centerInParent="true"
+        android:layout_width="match_parent"
+        android:background="@drawable/bg_popup_logout"
+        android:layout_height="wrap_content">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Kamu yakin ingin keluar?"
+            android:id="@+id/tx_keluar"
+            android:layout_marginBottom="24dp"
+            android:layout_centerHorizontal="true"
+            android:fontFamily="@font/poppins_semibold"
+            android:textColor="@color/black"
+            android:textSize="16sp"/>
+
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_below="@id/tx_keluar"
+            android:layout_height="0.5dp"
+            android:id="@+id/garis_hor"
+            android:background="@color/color_abu_abu_terang"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_below="@id/garis_hor"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="48dp"
+                android:background="@drawable/effect_ripple"
+                android:text="Batal"
+                android:id="@+id/popup_logout_batal"
+                android:fontFamily="@font/poppins_regular"
+                android:textColor="@color/black_63"
+                android:layout_weight="1"
+                android:gravity="center"/>
+
+            <View
+                android:layout_width="0.5dp"
+                android:layout_below="@id/tx_keluar"
+                android:layout_height="match_parent"
+                android:id="@+id/garis_ver"
+                android:background="@color/color_abu_abu_terang"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:text="Keluar"
+                android:layout_height="48dp"
+                android:background="@drawable/effect_ripple"
+                android:clickable="true"
+                android:id="@+id/popup_logout_keluar"
+                android:textColor="@color/black"
+                android:fontFamily="@font/poppins_semibold"
+                android:layout_weight="1"
+                android:gravity="center"/>
+        </LinearLayout>
+    </RelativeLayout>
+</RelativeLayout>

@@ -1,0 +1,432 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <FrameLayout
+        android:id="@+id/frame_utama"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/ly_utama"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_gradient_main">
+
+            <TextView
+                android:id="@+id/ket_tanggal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="8dp"
+                android:layout_marginTop="20dp"
+                android:fontFamily="@font/poppins_regular"
+                android:text="senin 10 Agustus 2022"
+                android:textColor="@color/abu_abu_keterangan"
+                android:visibility="gone"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/titik_dua_waktu"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/poppins_regular"
+                android:text=" : "
+                android:textColor="@color/abu_abu_keterangan"
+                app:layout_constraintLeft_toRightOf="@id/ket_tanggal"
+                app:layout_constraintTop_toTopOf="@id/ket_tanggal" />
+
+            <TextView
+                android:id="@+id/ket_jam"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/poppins_regular"
+                android:text="07:56 wib"
+                android:textColor="@color/abu_abu_keterangan"
+                android:visibility="gone"
+                app:layout_constraintLeft_toRightOf="@id/titik_dua_waktu"
+                app:layout_constraintTop_toTopOf="@id/titik_dua_waktu" />
+
+            <ImageView
+                android:id="@+id/btn_logout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:layout_marginRight="8dp"
+                android:padding="8dp"
+                android:src="@drawable/ic_icon_logout"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/nama_tim"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:fontFamily="@font/poppins_regular"
+                android:text="Nama Tim"
+                android:textColor="@color/white"
+                android:textSize="24sp"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/ket_tanggal" />
+
+            <TextView
+                android:id="@+id/status_absen"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:fontFamily="@font/poppins_regular"
+                android:text="Belum Presensi"
+                android:textColor="@color/merah_belum_presensi"
+                android:textSize="24sp"
+                android:visibility="gone"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/nama_tim" />
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/ly_card"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginTop="32dp"
+                android:background="@drawable/bg_card_2"
+                android:clickable="true"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/status_absen">
+
+                <ImageView
+                    android:id="@+id/img_hapus_foto"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:layout_marginBottom="-28dp"
+                    android:padding="4dp"
+                    android:src="@drawable/ic_icon_hapus_foto"
+                    android:translationZ="10dp"
+                    android:visibility="gone"
+                    app:layout_constraintBottom_toTopOf="@id/framelayout_area_tengah"
+                    app:layout_constraintRight_toRightOf="@id/framelayout_area_tengah" />
+                <!--    START FRAME LAYOUT AREA TENGAH    -->
+                <FrameLayout
+                    android:id="@+id/framelayout_area_tengah"
+                    android:layout_width="320dp"
+                    android:layout_height="360dp"
+                    android:layout_marginTop="32dp"
+                    app:layout_constraintLeft_toLeftOf="@id/ly_card"
+                    app:layout_constraintRight_toRightOf="@id/ly_card"
+                    app:layout_constraintTop_toTopOf="@id/ly_card">
+
+                    <!--AREA TENGAH.   start area preview upload foto    -->
+                    <ImageView
+                        android:id="@+id/preview_foto_presensi"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:foreground="@drawable/image_overlay"
+                        android:scaleType="centerCrop"
+                        android:src="@drawable/placeholder_male"
+                        android:visibility="gone" />
+                    <!--AREA TENGAH.   end area minta upload foto    -->
+
+                    <!--AREA TENGAH.   start area sudah berhasil upload     -->
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:id="@+id/ly_sudah_berhasil_upload"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@drawable/bg_area_sudah_upload"
+                        android:visibility="gone">
+
+                        <ImageView
+                            android:id="@+id/icon_sudah_berhasil_upload"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="8dp"
+                            android:src="@drawable/ic_centang_hijau"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintLeft_toLeftOf="parent"
+                            app:layout_constraintRight_toRightOf="parent"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:layout_constraintVertical_bias="0.45" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:fontFamily="@font/poppins_semibold"
+                            android:text="Foto presensi berhasil dikirim"
+                            android:textColor="@color/ket_upload"
+                            app:layout_constraintLeft_toLeftOf="parent"
+                            app:layout_constraintRight_toRightOf="parent"
+                            app:layout_constraintTop_toBottomOf="@id/icon_sudah_berhasil_upload" />
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+                    <!--AREA TENGAH.   end area sudah berhasil upload     -->
+
+                    <!--AREA TENGAH.   start area minta upload foto    -->
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:id="@+id/ly_ambil_foto_presensi"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@drawable/dash_rectangle">
+
+                        <ImageView
+                            android:id="@+id/icon_camera"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="8dp"
+                            android:src="@drawable/ic_icon_camera"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintLeft_toLeftOf="parent"
+                            app:layout_constraintRight_toRightOf="parent"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:layout_constraintVertical_bias="0.45" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:fontFamily="@font/poppins_semibold"
+                            android:text="Klik untuk mengambil foto presensi"
+                            android:textColor="@color/ket_upload"
+                            app:layout_constraintLeft_toLeftOf="parent"
+                            app:layout_constraintRight_toRightOf="parent"
+                            app:layout_constraintTop_toBottomOf="@id/icon_camera" />
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+                    <!--AREA TENGAH.   end area minta upload foto    -->
+                </FrameLayout>
+                <!--    END FRAME LAYOUT AREA TENGAH    -->
+
+                <!--       START FRAME LAYOUT AREA BAWAH -->
+
+                <FrameLayout
+                    android:id="@+id/framelayout_area_bawah"
+                    android:layout_width="320dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/framelayout_area_tengah">
+                    <!--AREA BAWAH.   start area btn kirim foto   -->
+                    <RelativeLayout
+                        android:id="@+id/btn_kirim_foto_presensi"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:background="@drawable/btn_utama_ripple"
+                        android:backgroundTint="@color/disable_button"
+                        android:clickable="false"
+                        android:gravity="center">
+
+                        <TextView
+                            android:id="@+id/label_kirim_absen"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_centerInParent="true"
+                            android:fontFamily="@font/poppins_semibold"
+                            android:text="Kirim Foto Presensi"
+                            android:textAlignment="center"
+                            android:textColor="@color/white"
+                            android:textSize="20sp" />
+
+                        <ProgressBar
+                            android:id="@+id/progress_kirim_absen"
+                            android:layout_width="28sp"
+                            android:layout_height="28sp"
+                            android:layout_centerInParent="true"
+                            android:indeterminateTint="@color/white"
+                            android:indeterminateTintMode="src_atop"
+                            android:visibility="gone" />
+                    </RelativeLayout>
+                    <!--AREA BAWAH.   end area btn kirim foto   -->
+
+                    <!--AREA BAWAH.   start area pemberitahuan terima kasih   -->
+                    <RelativeLayout
+                        android:id="@+id/area_keterangan_sudah_presensi"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:visibility="gone">
+
+                        <RelativeLayout
+                            android:id="@+id/ly_terimakasih"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="16dp"
+                            android:background="@drawable/bg_terimakasih_sudah_presensi"
+                            android:paddingHorizontal="12dp"
+                            android:paddingVertical="16dp">
+
+                            <TextView
+                                android:id="@+id/tv_terimakasih"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="8dp"
+                                android:fontFamily="@font/poppins_semibold"
+                                android:text="Terima Kasih"
+                                android:textColor="@color/white"
+                                android:textSize="16sp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_below="@id/tv_terimakasih"
+                                android:fontFamily="@font/poppins_regular"
+                                android:text="Anda telah berhasil melakukan presensi"
+                                android:textColor="@color/white"
+                                android:textSize="14sp" />
+                        </RelativeLayout>
+
+                        <TextView
+                            android:id="@+id/tv_kirim_ulang"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_below="@id/ly_terimakasih"
+                            android:fontFamily="@font/poppins_regular_italic"
+                            android:text="Kirim Ulang Absen"
+                            android:textColor="@color/biru_kirim_ulang"
+                            android:textSize="10sp" />
+                    </RelativeLayout>
+                    <!--AREA BAWAH.   end area pemberitahuan terima kasih   -->
+
+                </FrameLayout>
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/ly_ketentuan"
+                    android:layout_width="320dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
+                    android:background="@drawable/bg_ketentuan"
+                    app:layout_constraintLeft_toLeftOf="parent"
+                    app:layout_constraintRight_toRightOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/framelayout_area_bawah">
+
+                    <TextView
+                        android:id="@+id/ket_1_bullet"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="12dp"
+                        android:layout_marginTop="20dp"
+                        android:layout_marginRight="12dp"
+                        android:text="\u25CF"
+                        android:textColor="@color/tulisan_ketentuan"
+                        android:textSize="10dp"
+                        app:layout_constraintHorizontal_bias="0.01"
+                        app:layout_constraintLeft_toLeftOf="parent"
+                        app:layout_constraintRight_toRightOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <TextView
+                        android:id="@+id/ket_1"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="8dp"
+                        android:fontFamily="@font/poppins_regular"
+                        android:text="Pastikan GPS dan WIFI dalam keadaan aktif"
+                        android:textColor="@color/tulisan_ketentuan"
+                        android:textSize="10dp"
+                        app:layout_constraintLeft_toRightOf="@id/ket_1_bullet"
+                        app:layout_constraintTop_toTopOf="@id/ket_1_bullet" />
+
+
+                    <TextView
+                        android:id="@+id/ket_2_bullet"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="12dp"
+                        android:layout_marginTop="4dp"
+                        android:layout_marginRight="12dp"
+                        android:text="\u25CF"
+                        android:textColor="@color/tulisan_ketentuan"
+                        android:textSize="10dp"
+                        app:layout_constraintHorizontal_bias="0.01"
+                        app:layout_constraintLeft_toLeftOf="parent"
+                        app:layout_constraintRight_toRightOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/ket_1" />
+
+                    <TextView
+                        android:id="@+id/ket_2"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="8dp"
+                        android:fontFamily="@font/poppins_regular"
+                        android:paddingRight="40dp"
+                        android:text="Presensi hanya bisa dilakukan menggunakan WIFI kantor PT Zona Media Indonesia"
+                        android:textColor="@color/tulisan_ketentuan"
+                        android:textSize="10dp"
+                        app:layout_constraintHorizontal_bias="0"
+                        app:layout_constraintLeft_toRightOf="@id/ket_2_bullet"
+                        app:layout_constraintRight_toRightOf="parent"
+                        app:layout_constraintTop_toTopOf="@id/ket_2_bullet" />
+
+
+                    <TextView
+                        android:id="@+id/ket_3_bullet"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="12dp"
+                        android:layout_marginTop="4dp"
+                        android:text="\u25CF"
+                        android:textColor="@color/tulisan_ketentuan"
+                        android:textSize="10dp"
+                        app:layout_constraintHorizontal_bias="0.01"
+                        app:layout_constraintLeft_toLeftOf="parent"
+                        app:layout_constraintRight_toRightOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/ket_2" />
+
+                    <TextView
+                        android:id="@+id/ket_3"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="8dp"
+                        android:layout_marginBottom="20dp"
+                        android:fontFamily="@font/poppins_regular"
+                        android:paddingRight="40dp"
+                        android:text="Apabila semua syarat di atas sudah dilakukan namun tetap gagal mengirim presensi, maka disconnect hp anda terhadap WIFI kantor, lalu hubungkan kembali"
+                        android:textColor="@color/tulisan_ketentuan"
+                        android:textSize="10dp"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintHorizontal_bias="0"
+                        app:layout_constraintLeft_toRightOf="@id/ket_3_bullet"
+                        app:layout_constraintRight_toRightOf="parent"
+                        app:layout_constraintTop_toTopOf="@id/ket_3_bullet" />
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+                <!--        END FRAME LAYOUT AREA BAWAH-->
+
+                <CheckBox
+                    android:id="@+id/pintasan_ambil_foto"
+                    android:layout_width="320dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="32dp"
+                    android:fontFamily="@font/poppins_regular"
+                    android:text="aktifkan pintasan langsung ambil foto presensi ketika awal membuka aplikasi"
+                    android:visibility="gone"
+                    app:layout_constraintLeft_toLeftOf="parent"
+                    app:layout_constraintRight_toRightOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/framelayout_area_bawah" />
+
+                <CheckBox
+                    android:id="@+id/pintasan_kirim_foto"
+                    android:layout_width="320dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="32dp"
+                    android:fontFamily="@font/poppins_regular"
+                    android:text="aktifkan pintasan langsung kirim foto setelah mengambil foto"
+                    android:visibility="gone"
+                    app:layout_constraintLeft_toLeftOf="parent"
+                    app:layout_constraintRight_toRightOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/pintasan_ambil_foto" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <ProgressBar
+            android:id="@+id/pb_logout"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_gravity="center"
+            android:visibility="gone" />
+    </FrameLayout>
+</androidx.core.widget.NestedScrollView>

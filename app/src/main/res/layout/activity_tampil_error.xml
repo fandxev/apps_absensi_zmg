@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:background="@color/white"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".TampilErrorActivity">
+<TextView
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="Error Information"
+    android:textStyle="bold"
+    android:textSize="30dp"
+    android:textColor="@color/black"
+    android:layout_gravity="center_horizontal"
+    />
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="16dp"
+        android:layout_height="wrap_content">
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="error message:"
+        android:textColor="@color/black"
+        />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="exception"
+            android:id="@+id/txt_error_message"
+            android:textColor="@color/black"
+            android:textStyle="bold"/>
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:orientation="horizontal"
+        android:layout_height="wrap_content">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="tag:"
+            android:textColor="@color/black"
+            />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="exception"
+            android:id="@+id/txt_error_tag"
+            android:textColor="@color/black"
+            android:textStyle="bold"/>
+    </LinearLayout>
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_marginTop="24dp"
+        android:id="@+id/btn_error_kembali"
+        android:layout_height="wrap_content"
+        android:text="kembali"/>
+        />
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_marginTop="24dp"
+        android:id="@+id/btn_lihat_mode"
+        android:visibility="gone"
+        android:layout_height="wrap_content"
+        android:text="Lihat Mode"/>
+    />
+</LinearLayout>
