@@ -50,19 +50,20 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView2" />
 
-    <EditText
-        android:id="@+id/edt_nip"
-        android:paddingLeft="12dp"
-        android:paddingRight="4dp"
-        android:textColor="@color/black"
-        android:inputType="number"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:background="@drawable/ic_bg_edittext"
+   \
+    <AutoCompleteTextView
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/lbl_nip" />
+        app:layout_constraintTop_toBottomOf="@+id/lbl_nip"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingLeft="12dp"
+        android:id="@+id/edt_nip"
+        android:textColor="@color/black"
+        android:completionThreshold="1"
+        android:background="@drawable/ic_bg_edittext"
+        android:layout_marginTop="20dp"
+        />
 
     <ImageView
         android:id="@+id/ic_error"

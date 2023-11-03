@@ -29,12 +29,25 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.android.volley.*
-import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
 import com.example.aplikasipresensizmg.helper.RedirectToTampilErrorActivity
+import com.example.aplikasipresensizmg.helper.retrofit.ApiInterface
 import com.example.aplikasipresensizmg.helper.sharedpreferences.SharedPreferencesHelper
-import org.json.JSONException
+import com.example.aplikasipresensizmg.helper.sqlite.DataHandler
+import com.example.aplikasipresensizmg.helper.sqlite.DatabaseHelper
+import com.example.aplikasipresensizmg.model.ChecklogModel
+import com.example.aplikasipresensizmg.model.LoginModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import okhttp3.MediaType
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import org.json.JSONObject
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.awaitResponse
 import java.io.*
 import java.nio.charset.StandardCharsets
 
@@ -56,9 +69,22 @@ class MainActivityKotlin : AppCompatActivity() {
     lateinit var rQueue: RequestQueue
     var uriGambarAbsen: Uri? = null
     lateinit var progress_kirim_absen: ProgressBar
-    lateinit var pb_logout: ProgressBar
+    lateinit var pb_main_activity: ProgressBar
     lateinit var label_kirim_absen: TextView
+
+
+    //SQLITE
+    lateinit var context : Context
+    lateinit var dbHelper : DatabaseHelper
+    lateinit var dataHandler : DataHandler
+
+
     var tag_json_obj = "json_obj_req"
+
+    val apiInterface = ApiInterface.create()
+
+    private val TIPE_AKTIVITAS_KIRIMABSEN : Int = 0
+    private val TIPE_AKTIVITAS_LOGOUT : Int = 1
 
     private val CAMERA_PERMISSION_REQUEST_CODE = 100
     private val FINE_LOCATION_PERMISSION_REQUEST_CODE = 101
@@ -102,15 +128,30 @@ class MainActivityKotlin : AppCompatActivity() {
 
 
     /*END ALL PERMISSION STATUS*/
+
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.include_activity_main)
         initAnimation()
+        initSqlite()
         findViewByIdAllComponent()
         setListenerAllComponent()
         askFineLocationPermission()
         mekanismeCheckSemuaPermission()
         setNameFromPref()
+        //jika baru saja dari halaman login, tidak perlu validateToken()
+       checkIntentExtra()
+    }
+
+    fun checkIntentExtra(){
+        if(intent.hasExtra("from_login")) {
+
+        }
+        else{
+            validateToken()
+        }
     }
 
     private fun mekanismeCheckSemuaPermission() {
@@ -185,8 +226,9 @@ class MainActivityKotlin : AppCompatActivity() {
         tv_kirim_ulang = findViewById<TextView>(R.id.tv_kirim_ulang)
         img_hapus_foto = findViewById<ImageView>(R.id.img_hapus_foto)
         btn_logout = findViewById<ImageView>(R.id.btn_logout)
-        pb_logout = findViewById<ProgressBar>(R.id.pb_logout)
+        pb_main_activity = findViewById<ProgressBar>(R.id.pb_main_activity)
         ly_utama = findViewById<ConstraintLayout>(R.id.ly_utama)
+
     }
 
     private fun setListenerAllComponent() {
@@ -194,7 +236,8 @@ class MainActivityKotlin : AppCompatActivity() {
         btn_kirim_foto_presensi!!.setOnClickListener { mekanismeKirimAbsen() }
         tv_kirim_ulang.setOnClickListener(View.OnClickListener { resetStatePresensi() })
         img_hapus_foto.setOnClickListener(View.OnClickListener { resetStatePresensi() })
-        btn_logout.setOnClickListener(View.OnClickListener { showPopUpLogout() })
+        btn_logout.setOnClickListener(View.OnClickListener {
+            showPopUpLogout() })
     }
 
 
@@ -206,12 +249,10 @@ class MainActivityKotlin : AppCompatActivity() {
 
     private fun mekanismeKirimAbsen() {
         try {
+            //validasi token dulu masih aktif/tidak
             //hanya bisa mengirim ketika button kirim absen sedang idle
             if (CURRENT_STATE_KIRIM_ABSEN == STATE_IDLE_KIRIM_ABSEN) kirimAbsen(
-                SharedPreferencesHelper.read(
-                    SharedPreferencesHelper.ACCESS_TOKEN,
-                    ""
-                ), "absen", uriGambarAbsen, getBSSID()
+                getTokenFromSharedPref(), "absen", uriGambarAbsen, getBSSID()
             )
         }
         catch(e:Exception){
@@ -222,6 +263,18 @@ class MainActivityKotlin : AppCompatActivity() {
                 "mekanismeKirimAbsen"
             )
         }
+    }
+
+    private fun getTokenFromSharedPref(): String? {
+        return SharedPreferencesHelper.read(
+            SharedPreferencesHelper.ACCESS_TOKEN,
+            ""
+        )
+    }
+
+    //contoh token expired untuk debugging
+    private fun getExpiredToken(): String?  {
+        return "3401|PfIPw01UutfbBpFpMIneyqLkhzpMtiawkHtkBRIZ"
     }
 
 
@@ -636,8 +689,174 @@ class MainActivityKotlin : AppCompatActivity() {
         }
     }
 
-    //start area kirim foto
+    fun uriToFile(context: Context, uri: Uri): File? {
+        val contentResolver = context.contentResolver
+        val filePathColumn = arrayOf("_data")
+        val cursor = contentResolver.query(uri, filePathColumn, null, null, null)
+
+        return if (cursor != null) {
+            cursor.moveToFirst()
+            val columnIndex = cursor.getColumnIndex(filePathColumn[0])
+            val filePath = cursor.getString(columnIndex)
+            cursor.close()
+            File(filePath)
+        } else {
+            null
+        }
+    }
+
     private fun kirimAbsen(
+        authorizationBearToken: String?,
+        namaFileAbsen: String,
+        uriFileAbsen: Uri?,
+        bssid: String
+    ){
+        Log.d("debug_30-oct-23","authx: $authorizationBearToken")
+        if (CURRENT_STATE_KIRIM_ABSEN == STATE_LOADING_KIRIM_ABSEN) {
+            return
+        }
+
+        toggleStateBtnKirimAbsen(STATE_LOADING_KIRIM_ABSEN)
+
+
+        try {
+            val fileYangDikirim : File? = uriToFile(this@MainActivityKotlin,uriFileAbsen!!)
+            var fileRequestBody : RequestBody = RequestBody.create(MediaType.parse("image/*"),fileYangDikirim)
+
+            val filePart =
+                MultipartBody.Part.createFormData("file", fileYangDikirim?.getName(), fileRequestBody)
+
+            val textRequestBody: RequestBody = RequestBody.create(MultipartBody.FORM, bssid)
+            //  val textRequestBody: RequestBody = RequestBody.create(MultipartBody.FORM, "wifi salah")
+
+            //var call : Call<ChecklogModel?>? = apiInterface.uploadTextAndFile("Bearer 3401|PfIPw01UutfbBpFpMIneyqLkhzpMtiawkHtkBRIZ",filePart,textRequestBody)
+            var call : Call<ChecklogModel?>? = apiInterface.uploadTextAndFile("Bearer $authorizationBearToken",filePart,textRequestBody)
+
+            call?.enqueue(object : Callback<ChecklogModel?> {
+                override fun onResponse(
+                    call: Call<ChecklogModel?>,
+                    response: retrofit2.Response<ChecklogModel?>
+                ) {
+                    Log.d("debug_30-oct-23","outer response status: ${response.body()?.status}")
+                    Log.d("debug_30-oct-23","outer response message: ${response.body()?.message}")
+
+                    if (response.isSuccessful) {
+                        if(response.body()?.status == "1")
+                        {
+                            toggleShowAreaTengah(STATE_AREA_TENGAH_SHOW_BERHASIL_ABSEN)
+                            toggleShowAreaBawah(STATE_AREA_BAWAH_TAMPIL_TULISAN_SUDAH_ABSEN)
+                        }
+                        else if(response.body()?.status == "0") //biasanya kesalahan saat mencoba absen dari WIFI yang salah
+                        {
+                            Toast.makeText(this@MainActivityKotlin,response.body()?.message,Toast.LENGTH_LONG).show()
+                            toggleStateBtnKirimAbsen(STATE_IDLE_KIRIM_ABSEN)
+                        }
+                        Log.d("debug_30-oct-23","respon suksesz")
+                        Log.d("debug_30-oct-23","respon body"+response.body())
+                        Log.d("debug_30-oct-23","respon status "+response.body()?.status)
+                        Log.d("debug_30-oct-23","respon message "+response.body()?.message)
+
+
+                    } else {
+                        //jika error respon = 401 (unaouthorized, besar kemungkinan karena bear token expired, maka lakukan forceLogout)
+                        if(response.code() == 401)
+                        {
+                            processLogout(false)
+                        }
+                        Toast.makeText(this@MainActivityKotlin,"Error: ${response.code()}. Silahkan hubungi administrator",Toast.LENGTH_LONG).show()
+                        toggleStateBtnKirimAbsen(STATE_IDLE_KIRIM_ABSEN)
+                        Log.d("debug_30-oct-23","respon tidak suksesz")
+                        Log.d("debug_30-oct-23","respon: "+response)
+                        Log.d("debug_30-oct-23","messsage: "+response.message())
+                        Log.d("debug_30-oct-23","error body: "+response.errorBody())
+                        Log.d("debug_30-oct-23","res body: "+response.body())
+                        Log.d("debug_30-oct-23","raw: "+response.raw())
+                        Log.d("debug_30-oct-23","error code: "+response.code())
+                        Log.d("debug_30-oct-23","headers: "+response.headers())
+
+
+
+                    }
+                }
+
+                override fun onFailure(call: Call<ChecklogModel?>, t: Throwable?) {
+                    Log.d("debug_30-oct-23","retrofit gagal karena: "+t?.message)
+                    Toast.makeText(this@MainActivityKotlin,"Gagal Mengirim Presensi, pastikan internetmu aktif",Toast.LENGTH_LONG).show()
+                    toggleStateBtnKirimAbsen(STATE_IDLE_KIRIM_ABSEN)
+                }
+
+
+            })
+
+        }
+        catch (e:Exception){
+
+        }
+    }
+
+    private suspend fun getNewBearToken() : String { //jika 0 = kirimAbsen, 1 = logout
+        Log.d("debug_31-oct-23","getNewBearTOken() ")
+        val nip = SharedPreferencesHelper.read(
+            SharedPreferencesHelper.NIP,
+            ""
+        )
+        var newToken : String = ""
+
+
+        if (nip != null) {
+            Log.d("debug_31-oct-23","getNewBearTOken(). nip is not null ")
+            //mengkolaborasikan retrofit dengan coroutine. Retrofit jika menggunakan coroutine, maka tidak lagi menggunakan callback function (onResponse,onFailure), sebagai gantinya, gunakan .await() untuk mendapatkan datanya dan .awaitResponse() untuk mendapatkan responsenya
+            Log.d("debug_31-oct-23","getNewBearTOken() nip yang akan dikirim $nip")
+            var response = apiInterface.login(nip).awaitResponse()
+            if(response.isSuccessful){
+                Log.d("debug_31-oct-23","getNewBearTOken() nip is not null, response is successful ")
+                newToken = response.body()?.access_token ?: ""
+                Log.d("debug_31-oct-23","responseNewToken: "+newToken)
+            }
+            else{
+                Log.d("debug_31-oct-23","getNewBearTOken() nip is not null, response is NOT successful ")
+                Log.d("debug_31-oct-23","message: "+response.message())
+                Log.d("debug_31-oct-23","headers: "+response.headers())
+                Log.d("debug_31-oct-23","code: "+response.code())
+                Log.d("debug_31-oct-23","errorBody: "+response.errorBody())
+                Log.d("debug_31-oct-23","raw: "+response.raw())
+                Log.d("debug_31-oct-23","body: "+response.body())
+                Log.d("debug_31-oct-23","response: "+response)
+
+            }
+        }
+
+        else
+        {
+            Toast.makeText(this@MainActivityKotlin,"NIP is not store inside device",Toast.LENGTH_LONG).show()
+        }
+        Log.d("debug_31-oct-23","new token: $newToken")
+        return newToken
+    }
+
+
+    fun saveDataToSharedPref(access_token:String,id_user:String,name:String,nip:String,role:String,status:String){
+        try {
+            with(SharedPreferencesHelper)
+            {
+                write(ACCESS_TOKEN,access_token)
+                write(ID_USER,id_user)
+                write(NAME,name)
+                write(NIP,nip)
+                write(ROLE,role)
+                write(STATUS,status)
+            }
+        } catch (e: Exception) {
+            RedirectToTampilErrorActivity(
+                this@MainActivityKotlin,
+                "tc: ${e.message}",
+                "savedDataToSharedPref"
+            )
+        }
+    }
+
+    //start area kirim foto
+    private fun kirimAbsenVolley(
         authorizationBearToken: String?,
         namaFileAbsen: String,
         uriFileAbsen: Uri?,
@@ -648,8 +867,8 @@ class MainActivityKotlin : AppCompatActivity() {
         }
         toggleStateBtnKirimAbsen(STATE_LOADING_KIRIM_ABSEN)
         try {
-        val namaFileAbsen2 = getNameFromFile(uriFileAbsen)
-        var iStream: InputStream? = null
+            val namaFileAbsen2 = getNameFromFile(uriFileAbsen)
+            var iStream: InputStream? = null
             iStream = contentResolver.openInputStream(uriFileAbsen!!)
             val inputData = getBytes(iStream)
             val volleyMultipartRequest: VolleyMultipartRequest = object : VolleyMultipartRequest(
@@ -683,6 +902,16 @@ class MainActivityKotlin : AppCompatActivity() {
                 },
                 Response.ErrorListener { error ->
                     Toast.makeText(this@MainActivityKotlin,"Gagal mengirim foto absen, periksa koneksi internet anda",Toast.LENGTH_LONG).show()
+                    Log.d("debug_30-oct-23","gagal kirim absen karena: "+error.message)
+                    Log.d("debug_30-oct-23","network response: "+error.networkResponse)
+                    Log.d("debug_30-oct-23","error: "+error)
+                    Log.d("debug_30-oct-23","localized message: "+error.localizedMessage)
+                    Log.d("debug_30-oct-23","stacktrace to string: "+error.stackTraceToString())
+                    Log.d("debug_30-oct-23","stacktrace: "+error.stackTrace)
+                    Log.d("debug_30-oct-23","cause: "+error.cause)
+                    Log.d("debug_30-oct-23","print stacktrace: "+error.printStackTrace())
+                    Log.d("debug_30-oct-23","status code: "+error.networkResponse?.statusCode)
+
                     toggleStateBtnKirimAbsen(STATE_IDLE_KIRIM_ABSEN)
                     // Toast.makeText(MainActivity.this,"Terjadi kesalahan saat mengirim. Silahkan coba lagi",Toast.LENGTH_LONG).show();
                     //jika error code = 400, maka ada kemungkinan karena salah wifi, maka tampilkan pesan yang dibawah oleh server
@@ -711,7 +940,9 @@ class MainActivityKotlin : AppCompatActivity() {
                 @Throws(AuthFailureError::class)
                 override fun getHeaders(): Map<String, String> {
                     val headerMap: MutableMap<String, String> = HashMap()
-                    headerMap["Authorization"] = "Bearer $authorizationBearToken"
+                    headerMap["Content-Type"] = "multipart/form-data; charset=utf-8"
+                    //headerMap["Authorization"] = "Bearer $authorizationBearToken"
+                    headerMap["Authorization"] = "Bearer 3418|mU3QLUfo8sUdEFy1uxHfIu4rvOHjuaEEYo5cm6k8"
                     return headerMap
                 }
 
@@ -747,7 +978,6 @@ class MainActivityKotlin : AppCompatActivity() {
     }
     //end area kirim foto
 
-    //end area kirim foto
     private fun mekanismeFormatAndShowMessageFrom400ErrorCode(networkData: ByteArray) {
         try {
             val body = String(networkData, StandardCharsets.UTF_8)
@@ -859,94 +1089,45 @@ class MainActivityKotlin : AppCompatActivity() {
         dialog.show()
         popup_logout_keluar.setOnClickListener {
             dialog.dismiss()
-            signOut(SharedPreferencesHelper.read(SharedPreferencesHelper.ACCESS_TOKEN, ""))
+            signOutNormally(getTokenFromSharedPref())
         }
         popup_logout_batal.setOnClickListener { dialog.dismiss() }
     }
 //    end popup logout
 
     //    end popup logout
-    private fun signOut(authorizationBearToken: String?) {
-        //start volley get nomor wa
+    private fun signOutNormally(authorizationBearToken: String?) {
+        Log.d("2-nov-23","signout()()")
+
+
         fadeOutLayoutUtama()
-        showPbLogout()
-        val strReq: StringRequest = object : StringRequest(
-            Method.POST, URL_LOGOUT,
-            Response.Listener { response ->
-                try {
-                    val jObj = JSONObject(response)
-                    if (jObj.getInt("status") == 1) {
-                        SharedPreferencesHelper.removesesion(applicationContext)
-                        this@MainActivityKotlin.finish()
-                        startActivity(Intent(this@MainActivityKotlin, LoginActivity::class.java))
-                    } else {
-                        fadeInLayoutUtama()
-                        hidePbLogout()
-                    }
-                } catch (e: JSONException) {
-                    // JSON error
-                    e.printStackTrace()
-                    fadeInLayoutUtama()
-                    hidePbLogout()
-                    RedirectToTampilErrorActivity(
-                        this@MainActivityKotlin,
-                        "tc: ${e.message}",
-                        "signOut catch"
-                    )
-                }
-            },
-            Response.ErrorListener { error ->
-                fadeInLayoutUtama()
-                hidePbLogout()
-                RedirectToTampilErrorActivity(
-                    this@MainActivityKotlin,
-                    "tc: ${error.message}",
-                    "signOut errorListener"
-                )
-            }) {
-            //            parameter
-            override fun getParams(): Map<String, String>? {
-                // Posting parameters to login url
-                return HashMap()
+        showPbMainActivity()
+
+        var call : Call<LoginModel> = apiInterface.logout("Bearer $authorizationBearToken")
+
+        call.enqueue(object : Callback<LoginModel> {
+            override fun onResponse(
+                call: Call<LoginModel>,
+                response: retrofit2.Response<LoginModel>
+            ) {
+                processLogout(true)
             }
 
-            @Throws(AuthFailureError::class)
-            override fun getHeaders(): Map<String, String> {
-                val headerMap: MutableMap<String, String> = HashMap()
-                headerMap["Authorization"] = "Bearer $authorizationBearToken"
-                return headerMap
-            }
-        }
-
-
-//        ini heandling requestimeout
-        strReq.retryPolicy = object : RetryPolicy {
-            override fun getCurrentTimeout(): Int {
-                return 10000
+            override fun onFailure(call: Call<LoginModel>, t: Throwable?) {
+                processLogout(true)
             }
 
-            override fun getCurrentRetryCount(): Int {
-                return 10000
-            }
 
-            @Throws(VolleyError::class)
-            override fun retry(error: VolleyError) {
-                Log.e("18_agustus", "VolleyError Error: " + error.message)
-                //                eror_show();
-            }
-        }
+        })
 
-        // Adding request to request queue
-        MyApplication.getInstance().addToRequestQueue(strReq, tag_json_obj)
-        //end volley get nomor wa
     }
 
-    private fun showPbLogout() {
-        pb_logout.setVisibility(View.VISIBLE)
+    private fun showPbMainActivity() {
+        pb_main_activity.visibility = View.VISIBLE
     }
 
-    private fun hidePbLogout() {
-        pb_logout.setVisibility(View.GONE)
+    private fun hidePbMainActivity() {
+        pb_main_activity.visibility = View.GONE
     }
 
     private fun fadeOutLayoutUtama() {
@@ -956,6 +1137,73 @@ class MainActivityKotlin : AppCompatActivity() {
     private fun fadeInLayoutUtama() {
         ly_utama.startAnimation(fade_in)
     }
+
+
+    fun initSqlite() {
+         context = this@MainActivityKotlin // Gantilah ini dengan konteks aplikasi Anda
+         dbHelper = DatabaseHelper(context)
+         dataHandler = DataHandler(context)
+    }
+
+
+
+
+    fun validateToken() { //true = token masih aktif, false = token sudah expired
+        fadeOutLayoutUtama()
+        showPbMainActivity()
+        GlobalScope.launch(Dispatchers.IO) {
+            try {
+                val response =
+                    apiInterface.validateToken("Bearer ${getTokenFromSharedPref()}")?.awaitResponse()
+                if (response.isSuccessful) {
+                    withContext(Dispatchers.Main){
+                        fadeInLayoutUtama()
+                        hidePbMainActivity()
+                    }
+                } else if (response.code() == 401) {
+                    Log.d("debug_2-nov-23", "response 401x")
+                    withContext(Dispatchers.Main){
+                        fadeInLayoutUtama()
+                        hidePbMainActivity()
+                        processLogout(false)
+                    }
+                    //unauthorized, paksa logout pengguna agar login lagi dan mendapatkan token yang baru
+                    //lanjut disini
+                } else {
+                    withContext(Dispatchers.Main) {
+                        fadeInLayoutUtama()
+                        hidePbMainActivity()
+                    }
+
+                    //gagal namun bukan unauthorized, tidak perlu di logout paksa
+                }
+            }
+            catch (e:Exception){
+                //Biasanya karena koneksi error internet
+                withContext(Dispatchers.Main) {
+                    fadeInLayoutUtama()
+                    hidePbMainActivity()
+                }
+            }
+        }
+    }
+
+
+    private fun processLogout(isSignOutNormally:Boolean) { //signout normal = true jika user logout dari menu logout, jika force logout maka = false
+        val nip = SharedPreferencesHelper.read(SharedPreferencesHelper.NIP,"")
+        SharedPreferencesHelper.removesesion(applicationContext)
+        this@MainActivityKotlin.finish()
+        if(isSignOutNormally) { //jika logout secara normal (lewat menu logout), maka TIDAK PERLU passing nip ke halaman login
+            startActivity(Intent(this@MainActivityKotlin, LoginActivity::class.java))
+        }
+        else{
+            //jika logout secara tidak normal (force logout), maka passing nip ke halaman login
+            var intent:Intent = Intent(this@MainActivityKotlin, LoginActivity::class.java)
+            intent.putExtra("nip_force_logout",nip)
+            startActivity(intent)
+        }
+    }
+
 
 
 }

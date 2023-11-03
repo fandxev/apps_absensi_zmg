@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+    <TextView
+        android:id="@+id/tv_suggest_nip"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="080123018"
+        android:textSize="16sp"
+        android:textColor="@color/black"
+        android:textStyle="bold"
+        android:padding="4dp"/>
+
+    <TextView
+        android:id="@+id/tv_suggest_nama"
+        android:textColor="@color/black"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Fandy Ahmad Joansyah"
+        android:textSize="14sp"
+        android:padding="4dp"/>
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1.2dp"
+        android:background="#DCDCDC"
+        android:layout_marginTop="4dp"
+        />
+</LinearLayout>

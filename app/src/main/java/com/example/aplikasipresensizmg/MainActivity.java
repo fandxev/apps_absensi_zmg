@@ -4,12 +4,10 @@ import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.content.res.ColorStateList;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.drawable.ColorDrawable;
 import android.location.LocationManager;
-import android.media.Image;
 import android.net.Uri;
 import android.net.wifi.SupplicantState;
 import android.net.wifi.WifiInfo;
@@ -21,7 +19,6 @@ import android.util.Log;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
@@ -199,7 +196,7 @@ public class MainActivity extends AppCompatActivity {
         tv_kirim_ulang = findViewById(R.id.tv_kirim_ulang);
         img_hapus_foto = findViewById(R.id.img_hapus_foto);
         btn_logout = findViewById(R.id.btn_logout);
-        pb_logout = findViewById(R.id.pb_logout);
+        pb_logout = findViewById(R.id.pb_main_activity);
         ly_utama = findViewById(R.id.ly_utama);
     }
 
